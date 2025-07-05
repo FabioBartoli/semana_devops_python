@@ -1,5 +1,3 @@
-# Alteração para testar - Editando imagem
-
 # Metrics API
 
 Esta é uma aplicação de exemplo,
@@ -28,7 +26,7 @@ uv sync
 uv run uvicorn main:app --host 0.0.0.0 --port 8081
 ```
 
-## Outras branches
+## Simulação
 
 ```bash
 docker run --net=host --rm -it \
