@@ -1,0 +1,39 @@
+name: Validate PR Commits
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  validate-commits:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install UV
+        uses: astral-sh/setup-uv@v1
+        with:
+          version: "latest"
+
+      - name: Sync dependencies
+        run: uv sync --all-groups
+
+      - name: Run commit validation
+        id: validate
+        continue-on-error: true
+        run: |
+          uv run .github/scripts/validate_commits.py origin/gha HEAD
+
+      - name: Alert on Slack if validation fails
+        if: steps.validate.outcome == 'failure'
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_CHANNEL: "#alerts"
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_ACTOR: ${{ github.actor }}
+        run: |
+          uv run .github/scripts/alert_on_slack.py "Some commits in PR #${{ github.event.pull_request.number }} are invalid." && exit 1
